@@ -1,0 +1,11 @@
+institution_id,name,address,phone,website
+1,Bank of America,"100 N Tryon St, Charlotte, NC 28255",1-800-432-1000,https://www.bankofamerica.com
+2,Chase Bank,"270 Park Ave, New York, NY 10017",1-800-935-9935,https://www.chase.com
+3,Wells Fargo,"420 Montgomery St, San Francisco, CA 94104",1-800-869-3557,https://www.wellsfargo.com
+4,Ally Bank,"P.O. Box 951, Horsham, PA 19044",1-877-247-2559,https://www.ally.com
+5,Goldman Sachs Bank USA,"200 West St, New York, NY 10282",1-855-730-7283,https://www.marcus.com
+6,American Express National Bank,"4315 S 2700 W, Salt Lake City, UT 84184",1-800-446-6307,https://www.americanexpress.com
+7,Capital One,"1680 Capital One Drive, McLean, VA 22102",1-877-383-4802,https://www.capitalone.com
+8,Discover Bank,"502 E Market St, Greenwood, DE 19950",1-800-347-7000,https://www.discover.com
+9,Barclays Bank Delaware,"125 S West St, Wilmington, DE 19801",1-888-710-8756,https://www.banking.barclaysus.com
+10,Citizens Access,"1 Citizens Plaza, Providence, RI 02903",1-888-201-6505,https://www.citizensaccess.com
