@@ -52,25 +52,15 @@ def update_apy_last_year(conn):
     conn.commit()
 
 def calc_best_csp_savings_account(df):
-    """
-    Calculate the Coefficient of Stability and Profitability (CSP) for each account
-    and return the account with the highest CSP.
-    
-    Parameters:
-    df (DataFrame): The DataFrame containing the APY data.
-    
-    Returns:
-    Series or None: The row corresponding to the account with the highest CSP, or None if no data is available.
-    """
     if df.empty:
         return None
     
-    grouped = df.groupby('account_id')['apy'].agg(['mean', 'var']).reset_index()
+    grouped = df.groupby('account_id')['apy'].agg(['mean', 'std']).reset_index()
     
-    # Replace zero variance with a small number to avoid division by zero
-    grouped['var'] = grouped['var'].replace(0, 1e-10)
+    # Replace zero std with a small number to avoid division by zero
+    grouped['std'] = grouped['std'].replace(0, 1e-10)
     
-    grouped['csp'] = grouped['mean'] / grouped['var']
+    grouped['csp'] = grouped['mean'] / grouped['std']
     
     best_account = grouped.loc[grouped['csp'].idxmax()]
     
@@ -84,10 +74,9 @@ def detect_and_print_best_csp_savings_account(conn):
     if best_account is None:
         print("No data available to calculate CSP.")
     else:
-        print(f"Best Account based on CSP:\nAccount ID: {best_account['account_id']}\nMean APY: {best_account['mean']:.4f}\nVariance of APY: {best_account['var']:.10f}\nCSP: {best_account['csp']:.4f}")
+        print(f"Best Account based on CSP:\nAccount ID: {best_account['account_id']}\nMean APY: {best_account['mean']:.4f}\nStandard Deviation of APY: {best_account['var']:.10f}\nCSP: {best_account['csp']:.4f}")
 
 def get_database_path():
-    # Check if the database path is provided as a CLI argument
     parser = argparse.ArgumentParser(description='Specify the path to the database file.')
     parser.add_argument('--db-path', type=str, help='Path to the database file')
     args = parser.parse_args()
@@ -95,12 +84,10 @@ def get_database_path():
     if args.db_path:
         return args.db_path
 
-    # If not provided via CLI, check for an environment variable
     db_path = os.getenv('DB_PATH')
     if db_path:
         return db_path
 
-    # If neither is provided, show error message and exit
     logging.error("Database path not specified. Please provide the database path using --db-path argument or DB_PATH environment variable.")
     sys.exit(1)
 
@@ -118,8 +105,6 @@ def main():
 
         detect_and_print_best_csp_savings_account(conn)
 
-    except Exception as e:
-        logging.error("An error occurred: %s", e)
     finally:
         if conn:
             conn.close()
