@@ -2,22 +2,15 @@
 
 Manage your family emergency fund based on data-driven decisions.
 
-## Table of Contents
+## Environment pre-requisites
 
-- [Introduction](#introduction)
-- [Prerequisites](#prerequisites)
-- [Usage](#usage)
-- [Testing](#testing)
-- [Database Schema](#database-schema)
-- [License](#license)
-
-## Install and Setup
-
-Pre-requisites:
 - Python 3.11 or higher
 - SQLite 3
 
 Docker is not supported.
+
+## Install and Setup
+
 
 Install libraries:
 ```bash
@@ -41,12 +34,43 @@ sqlite3 ./data/emergency_fund.db <<EOF
 .mode csv
 .import ./db/institutions.seed.csv institutions
 .import ./db/savings_accounts.seed.csv savings_accounts
+.import ./db/savings_accounts_apy_history.seed.csv savings_accounts_apy_history
 EOF
 ```
 
+At this point we have all data in DB we need so we can start using the application.
+
+## Usage
+
+### Find the best savings account based on the CSP metric
+
+CSP - Coefficient of Stability and Profitability.
+
+You can run as the CLI tool:
+```bash
+python src/find_best_csp.py
+```
+
+You can also use Jupyter Notebook `src/find_best_csp.ipynb`.
+
+## Find all accounts' profitability
+
+You can run as the CLI tool:
+```bash
+python src/find_profitability.py
+```
+
+You can also use Jupyter Notebook `src/find_profitability.ipynb`.
+
+## Explore the data
+
+You can use Jupyter Notebook `src/eda.ipynb`.
+
+## Generate APY history for the last year
+
 Generate APY history data for every account:
 ```bash
-python3 src/generate_apy_history.py
+python src/generate_apy_history.py
 ```
 
 Insert newly generated APY history data to DB:
@@ -57,39 +81,11 @@ sqlite3 ./data/emergency_fund.db <<EOF
 EOF
 ```
 
-At this point we have all data in DB we need so we can start using the application.
-
-## Usage
-
 ### Clean up the DB
 
 ```bash
 rm ./data/emergency_fund.db
 ```
-
-### Find the best savings account based on the CSP metric
-
-CSP - Coefficient of Stability and Profitability.
-
-You can run as the CLI tool:
-```bash
-python3 src/find_best_csp.py
-```
-
-You can also use Jupyter Notebook `src/find_best_csp.ipynb`.
-
-## Find all accounts' profitability
-
-You can run as the CLI tool:
-```bash
-python3 src/find_profitability.py
-```
-
-You can also use Jupyter Notebook `src/find_profitability.ipynb`.
-
-## Explore the data
-
-You can use Jupyter Notebook `src/eda.ipynb`.
 
 ## Testing
 
@@ -102,7 +98,7 @@ pytest test_detect_best_csp_savings_account.py
 ### APY history for the last year is empty
 
 ```bash
-python3 src/find_best_csp.py
+python src/find_best_csp.py
 ```
 
 ```
