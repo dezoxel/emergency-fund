@@ -1,8 +1,6 @@
 # Emergency Fund Management
 
-Manage your family emergency fund based on data-driven decisions
-
-Currently, only one simple script is available. It finds the best savings account based on the Coefficient of Stability and Profitability (CSP). It calculates the CSP for each savings account using their Annual Percentage Yield (APY) data over the past year.
+Manage your family emergency fund based on data-driven decisions.
 
 ## Table of Contents
 
@@ -13,44 +11,85 @@ Currently, only one simple script is available. It finds the best savings accoun
 - [Database Schema](#database-schema)
 - [License](#license)
 
-## Introduction
+## Install and Setup
 
-The `detect_best_csp_savings_account.py` script connects to an SQLite database containing historical APY data for various savings accounts. It updates the APY data for the past year, calculates the CSP for each account, and identifies the account with the highest CSP.
+Pre-requisites:
+- Python 3.11 or higher
+- SQLite 3
 
-## Prerequisites
+Docker is not supported.
 
-- Python 3.7+
-- SQLite
-- Required Python packages: `pandas`, `pytest`, `argparse`
+Install libraries:
+```bash
+pip install -r requirements.txt
+```
+
+Create environment configuration file:
+```bash
+cp .env.example .env
+```
+Default values are good to go. You can change them if needed.
+
+Create DB tables:
+```bash
+sqlite3 ./data/emergency_fund.db < ./db/schema.sql
+```
+
+Insert seed data:
+```bash
+sqlite3 ./data/emergency_fund.db <<EOF
+.mode csv
+.import ./db/institutions.seed.csv institutions
+.import ./db/savings_accounts.seed.csv savings_accounts
+EOF
+```
+
+Generate APY history data for every account:
+```bash
+python3 src/generate_apy_history.py
+```
+
+Insert newly generated APY history data to DB:
+```bash
+sqlite3 ./data/emergency_fund.db <<EOF
+.mode csv
+.import ./db/savings_accounts_apy_history.seed.csv savings_accounts_apy_history
+EOF
+```
+
+At this point we have all data in DB we need so we can start using the application.
 
 ## Usage
 
-1. **Database Setup:**
+### Clean up the DB
 
-   Before running the script, ensure your SQLite database is set up correctly using the provided `schema.sql` file.
+```bash
+rm ./data/emergency_fund.db
+```
 
-   ```bash
-   sqlite3 your_database.db < schema.sql
-   ```
+### Find the best savings account based on the CSP metric
 
-2. **Running the Script:**
+CSP - Coefficient of Stability and Profitability.
 
-   To run the script, you can provide the path to your SQLite database file via a command-line argument or an environment variable.
+You can run as the CLI tool:
+```bash
+python3 src/find_best_csp.py
+```
 
-   ```bash
-   python detect_best_csp_savings_account.py --db-path /path/to/your_database.db
-   ```
+You can also use Jupyter Notebook `src/find_best_csp.ipynb`.
 
-   Or set the `DB_PATH` environment variable:
+## Find all accounts' profitability
 
-   ```bash
-   export DB_PATH=/path/to/your_database.db
-   python detect_best_csp_savings_account.py
-   ```
+You can run as the CLI tool:
+```bash
+python3 src/find_profitability.py
+```
 
-3. **Output:**
+You can also use Jupyter Notebook `src/find_profitability.ipynb`.
 
-   The script will output the account with the highest CSP along with its mean APY and variance of APY.
+## Explore the data
+
+You can use Jupyter Notebook `src/eda.ipynb`.
 
 ## Testing
 
@@ -58,16 +97,21 @@ The `detect_best_csp_savings_account.py` script connects to an SQLite database c
 pytest test_detect_best_csp_savings_account.py
 ```
 
-## Database Schema
+## Troubleshooting
 
-The `schema.sql` file sets up the necessary tables and inserts sample data for testing purposes. The main tables include:
+### APY history for the last year is empty
 
-- `institutions`: Information about financial institutions.
-- `savings_accounts`: Details about savings accounts under interest.
-- `savings_accounts_apy_history`: Historical APY data for savings accounts.
-- `savings_accounts_apy_last_year`: APY data for the last year for every savings account.
-- `savings_account_withdraw_types`: Different withdrawal types for savings accounts.
-- `savings_account_withdraw_terms_history`: Historical data on withdrawal terms for savings accounts.
+```bash
+python3 src/find_best_csp.py
+```
+
+```
+Unable to update APY data for the last year. APY history for the last year is empty.
+Unable to find the best CSP savings account. APY data for the last year is empty.
+Best CSP Savings Account not found.
+```
+
+The APY history is generated for the time range using `START_DATE` and `END_DATE` environment variables. On the other side, the `find_best_csp.py` script uses the last year using the current date. If `START_DATE` and `END_DATE` are more than a year in the past, the history for the last will be empty. To fix this, you can update the `START_DATE` and `END_DATE` environment variables in the `.env` file, clean up the DB, recreate the DB tables, insert seed data, and generate the history again. See commands in the "Clean up the DB" and "Install and Setup" sections.
 
 ## License
 
