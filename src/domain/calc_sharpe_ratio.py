@@ -1,4 +1,4 @@
-def calc_csp_for_every_account(df):
+def calc_sharpe_ratio_for_every_account(df):
     if df.empty:
         return []
     
@@ -7,16 +7,16 @@ def calc_csp_for_every_account(df):
     # Replace zero std with a small number to avoid division by zero
     grouped['std'] = grouped['std'].replace(0, 1e-10)
     
-    grouped['csp'] = grouped['mean'] / grouped['std']
+    grouped['sr'] = grouped['mean'] / grouped['std']
     return grouped
 
-def calc_best_csp_savings_account(df):
+def calc_best_savings_account_by_sharpe_ratio(df):
     if df.empty:
         return None
     
-    csp_df = calc_csp_for_every_account(df)
+    sr_df = calc_sharpe_ratio_for_every_account(df)
     
-    best_account = csp_df.loc[csp_df['csp'].idxmax()].copy()
+    best_account = sr_df.loc[sr_df['sr'].idxmax()].copy()
     account_name = df.loc[df['account_id'] == best_account['account_id'], 'account_name'].iloc[0]
     best_account['account_name'] = account_name
     

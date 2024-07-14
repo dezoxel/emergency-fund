@@ -42,16 +42,18 @@ At this point we have all data in DB we need so we can start using the applicati
 
 ## Usage
 
-### Find the best savings account based on the CSP metric
+### Find the best savings account based on the Sharpe Ratio
 
-CSP - Coefficient of Stability and Profitability.
+[Sharpe Ratio](https://www.investopedia.com/terms/s/sharperatio.asp) - a measure for calculating risk-adjusted return.
+
+Sharpe Ratio respects low volatility and high return. The higher the Sharpe Ratio, the better the investment's return relative to the risk.
 
 You can run as the CLI tool:
 ```bash
-python src/find_best_csp.py
+python src/find_best_by_sharpe_ratio.py
 ```
 
-You can also use Jupyter Notebook `src/find_best_csp.ipynb`.
+You can also use Jupyter Notebook `src/find_best_by_sharpe_ratio.ipynb`.
 
 ## Find all accounts' profitability
 
@@ -87,27 +89,21 @@ EOF
 rm ./data/emergency_fund.db
 ```
 
-## Testing
-
-```bash
-pytest test_detect_best_csp_savings_account.py
-```
-
 ## Troubleshooting
 
 ### APY history for the last year is empty
 
 ```bash
-python src/find_best_csp.py
+python src/find_best_by_sharpe_ratio.py
 ```
 
 ```
 Unable to update APY data for the last year. APY history for the last year is empty.
-Unable to find the best CSP savings account. APY data for the last year is empty.
-Best CSP Savings Account not found.
+Unable to find the best savings account by Sharpe Ratio. APY data for the last year is empty.
+Best Savings Account by Sharpe Ratio is not found.
 ```
 
-The APY history is generated for the time range using `START_DATE` and `END_DATE` environment variables. On the other side, the `find_best_csp.py` script uses the last year using the current date. If `START_DATE` and `END_DATE` are more than a year in the past, the history for the last will be empty. To fix this, you can update the `START_DATE` and `END_DATE` environment variables in the `.env` file, clean up the DB, recreate the DB tables, insert seed data, and generate the history again. See commands in the "Clean up the DB" and "Install and Setup" sections.
+The APY history is generated for the time range using `START_DATE` and `END_DATE` environment variables. On the other side, the `find_best_by_sharpe_ratio.py` script uses the last year using the current date. If `START_DATE` and `END_DATE` are more than a year in the past, the history for the last will be empty. To fix this, you can update the `START_DATE` and `END_DATE` environment variables in the `.env` file, clean up the DB, recreate the DB tables, insert seed data, and generate the history again. See commands in the "Clean up the DB" and "Install and Setup" sections.
 
 ## License
 

@@ -1,6 +1,6 @@
 import pandas as pd
 import pytest
-from app.best_csp_savings_account import calc_apy_last_year
+from app.sharpe_ratio import calc_apy_last_year
 
 def test_calc_apy_last_year_empty():
     df = pd.DataFrame(columns=['account_id', 'apy', 'month'])
