@@ -50,7 +50,8 @@ CREATE TABLE savings_account_withdraw_terms_history (
 CREATE TABLE savings_accounts_apy_history (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     account_id INTEGER NOT NULL,
-    apy REAL,
+    apy REAL NOT NULL,
+    compound_frequency INTEGER NOT NULL DEFAULT 365,
     effective_date DATETIME NOT NULL,
     FOREIGN KEY (account_id) REFERENCES savings_accounts (id)
 );
@@ -61,4 +62,10 @@ CREATE TABLE savings_accounts_apy_last_year (
     date DATE,
     FOREIGN KEY (account_id) REFERENCES savings_accounts (id),
     UNIQUE(account_id, date)
+);
+
+CREATE TABLE risk_free_rate_history (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    rate REAL NOT NULL,
+    effective_date DATETIME NOT NULL
 );

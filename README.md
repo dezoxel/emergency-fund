@@ -35,6 +35,7 @@ sqlite3 ./data/emergency_fund.db <<EOF
 .import ./db/institutions.seed.csv institutions
 .import ./db/savings_accounts.seed.csv savings_accounts
 .import ./db/savings_accounts_apy_history.seed.csv savings_accounts_apy_history
+.import ./db/risk_free_rate.seed.csv risk_free_rate_history
 EOF
 ```
 
