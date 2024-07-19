@@ -1,8 +1,7 @@
 import pandas as pd
-from datetime import timedelta, datetime
-from sqlite3 import Connection
+from datetime import timedelta
 
-def fetch_apy_history_last_year(conn: Connection, current_date: datetime):
+def fetch_apy_history_last_year(conn, current_date):
     # TODO: Handle leap years
     one_year_ago = current_date - timedelta(days=365)
 
@@ -19,7 +18,7 @@ def fetch_apy_history_last_year(conn: Connection, current_date: datetime):
     
     return df
 
-def fetch_terms_history_last_year(conn: Connection, current_date: datetime):
+def fetch_terms_history_last_year(conn, current_date):
     # TODO: Handle leap years
     one_year_ago = current_date - timedelta(days=365)
 

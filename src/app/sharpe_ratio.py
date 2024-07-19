@@ -1,7 +1,3 @@
-import pandas as pd
-from datetime import datetime
-from sqlite3 import Connection
-
 from domain.balance import convert_apy_to_annual_rate_terms_history
 from infra.risk_free_rate_repo import fetch_rfr_history_last_year
 from infra.savings_account_apy_history_repo import fetch_apy_history_last_year, fetch_terms_history_last_year
@@ -9,7 +5,7 @@ from domain.account_sharpe_ratio import calc_apy_last_year, calc_best_savings_ac
 from infra.savings_account_apy_last_year_repo import clear_apy_last_year
 from infra.savings_account_repo import find_savings_account_by_id
 
-def update_apy_last_year(conn: Connection, current_date: datetime):
+def update_apy_last_year(conn, current_date):
     df = fetch_apy_history_last_year(conn, current_date)
     if df.empty:
         print('Unable to update APY data for the last year. APY history for the last year is empty.')
@@ -18,7 +14,7 @@ def update_apy_last_year(conn: Connection, current_date: datetime):
     df.to_sql('savings_accounts_apy_last_year', conn, if_exists='append', index=False)
     conn.commit()
 
-def print_best_savings_account_by_sharpe_ratio(best_account: dict):
+def print_best_savings_account_by_sharpe_ratio(best_account):
     print(
         f"Best Savings Account by Sharpe Ratio is:\n"
         f"Institution: {best_account['institution_name']}\n"
@@ -34,7 +30,7 @@ def calc_risk_place(df, account_id):
     risk_place = df.sort_values(by='std_returns')['account_id'].tolist().index(account_id) + 1
     return risk_place
 
-def find_and_print_best_savings_account_by_sharpe_ratio_last_year(conn: Connection, current_date: datetime, P: float):
+def find_and_print_best_savings_account_by_sharpe_ratio_last_year(conn, current_date, P):
     apy_terms_history = fetch_terms_history_last_year(conn, current_date)
     rfr_history = fetch_rfr_history_last_year(conn, current_date)
 

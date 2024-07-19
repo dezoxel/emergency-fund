@@ -1,8 +1,7 @@
-from datetime import datetime
 from dateutil.relativedelta import relativedelta
 import calendar
 
-def calculate_time_diff_in_years(begin_date: datetime, end_date: datetime) -> float:
+def calculate_time_diff_in_years(begin_date, end_date):
     rd = relativedelta(end_date, begin_date)
     full_months = rd.years * 12 + rd.months
     

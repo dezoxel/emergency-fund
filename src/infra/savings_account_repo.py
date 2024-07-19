@@ -1,7 +1,6 @@
-from sqlite3 import Connection
 import pandas as pd
 
-def fetch_savings_accounts(conn: Connection) -> pd.DataFrame:
+def fetch_savings_accounts(conn):
     query = """
     SELECT id, account_type
     FROM savings_accounts
@@ -9,7 +8,7 @@ def fetch_savings_accounts(conn: Connection) -> pd.DataFrame:
     df = pd.read_sql_query(query, conn).to_dict(orient='records')
     return df
 
-def find_savings_account_by_id(conn: Connection, account_id: int) -> dict:
+def find_savings_account_by_id(conn, account_id):
     query = """
     SELECT sa.id, sa.account_name, sa.account_type, i.name as institution_name
     FROM savings_accounts sa

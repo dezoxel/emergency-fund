@@ -1,15 +1,10 @@
 import numpy as np
-from datetime import datetime
 import pandas as pd
-from typing import Dict, List
 
 from domain.balance import calc_compound_future_value_with_dynamic_terms
 from domain.sharpe_ratio_math import calc_sharpe_ratio
 
-# TODO: replace with dataclass?
-ShareRatioStatsByAccount = Dict[str, Dict[str, List[float]]]
-
-def calc_compound_future_value_for_every_account(P: float, current_date: datetime, terms_history: pd.DataFrame) -> dict:
+def calc_compound_future_value_for_every_account(P, current_date, terms_history):
     terms_by_account = terms_history.groupby('account_id')
 
     stats_by_account = {

@@ -1,8 +1,7 @@
-from datetime import datetime, timedelta
-from sqlite3 import Connection
+from datetime import timedelta
 import pandas as pd
 
-def fetch_rfr_history_last_year(conn: Connection, current_date: datetime):
+def fetch_rfr_history_last_year(conn, current_date):
     # TODO: Handle leap years
     one_year_ago = current_date - timedelta(days=365)
 
