@@ -37,11 +37,12 @@ def print_best_savings_account_by_sharpe_ratio(best_account: dict):
         f"Account Name: {best_account['account_name']}\n"
         f"Account ID: {best_account['account_id']:.0f}\n"
         f"Sharpe Ratio: {best_account['sr']:.4f}\n"
+        f"ROI: {best_account['return_rate']*100:.2f}%\n"
     )
 
 def find_and_print_best_savings_account_by_sharpe_ratio(conn: Connection, current_date: datetime, P: float):
-    best_account_id_and_sr = find_best_savings_account_by_sharpe_ratio(conn, current_date, P)
-    account_details = find_savings_account_by_id(conn, best_account_id_and_sr['account_id'])
-    best_account = best_account_id_and_sr | account_details
+    best_account_stats = find_best_savings_account_by_sharpe_ratio(conn, current_date, P)
+    account_details = find_savings_account_by_id(conn, best_account_stats['account_id'])
+    best_account = best_account_stats | account_details
     print_best_savings_account_by_sharpe_ratio(best_account)
 
