@@ -1,9 +1,12 @@
+import pandas as pd
 from datetime import datetime
 from sqlite3 import Connection
 
-from infra.savings_account_apy_history_repo import fetch_apy_history_last_year
-from domain.calc_sharpe_ratio import calc_apy_last_year, calc_best_savings_account_by_sharpe_ratio
-from infra.savings_account_apy_last_year_repo import clear_apy_last_year, fetch_apy_last_year
+from infra.risk_free_rate_repo import fetch_rfr_history_last_year
+from infra.savings_account_apy_history_repo import fetch_apy_history_last_year, fetch_terms_history_last_year
+from domain.account_sharpe_ratio import calc_apy_last_year, calc_best_savings_account_by_sharpe_ratio, calc_sharpe_ratio_for_all_accounts
+from infra.savings_account_apy_last_year_repo import clear_apy_last_year
+from infra.savings_account_repo import find_savings_account_by_id
 
 def update_apy_last_year(conn: Connection, current_date: datetime):
     df = fetch_apy_history_last_year(conn, current_date)
@@ -14,21 +17,31 @@ def update_apy_last_year(conn: Connection, current_date: datetime):
     df.to_sql('savings_accounts_apy_last_year', conn, if_exists='append', index=False)
     conn.commit()
 
-def find_best_savings_account_by_sharpe_ratio(conn: Connection, current_date: datetime):
-    update_apy_last_year(conn, current_date)
-    df = fetch_apy_last_year(conn)
-    if df.empty:
-        print('Unable to find the best savings account by Sharpe Ratio. APY data for the last year is empty.')
-        return None
-    return calc_best_savings_account_by_sharpe_ratio(df)
+def find_best_savings_account_by_sharpe_ratio(conn: Connection, current_date: datetime, P: float) -> dict:
+    terms_history_df = fetch_terms_history_last_year(conn, current_date)
+    rfr_history_df = fetch_rfr_history_last_year(conn, current_date)
 
-def print_best_savings_account_by_sharpe_ratio(best_account):
-    if best_account is None:
-        print('Best Savings Account by Sharpe Ratio is not found.')
-    else:
-        print(f"Best Savings Account by Sharpe Ratio:\nAccount ID: {best_account['account_id']}\nMean APY: {best_account['mean']:.4f}\nStandard Deviation of APY: {best_account['std']:.10f}\nSharpe Ratio: {best_account['sr']:.4f}")
+    return calc_best_savings_account_by_sharpe_ratio(P, current_date, terms_history_df, rfr_history_df)
 
-def find_and_print_best_savings_account_by_sharpe_ratio(conn: Connection, current_date: datetime):
-    best_account = find_best_savings_account_by_sharpe_ratio(conn, current_date)
+def find_sharpe_ratio_for_all_accounts(conn: Connection, current_date: datetime, P: float) -> pd.DataFrame:
+    terms_history_df = fetch_terms_history_last_year(conn, current_date)
+    rfr_history_df = fetch_rfr_history_last_year(conn, current_date)
+
+    return calc_sharpe_ratio_for_all_accounts(P, current_date, terms_history_df, rfr_history_df)
+
+def print_best_savings_account_by_sharpe_ratio(best_account: dict):
+    print(
+        f"Best Savings Account by Sharpe Ratio is:\n"
+        f"Institution: {best_account['institution_name']}\n"
+        f"Account Type: {best_account['account_type']}\n"
+        f"Account Name: {best_account['account_name']}\n"
+        f"Account ID: {best_account['account_id']:.0f}\n"
+        f"Sharpe Ratio: {best_account['sr']:.4f}\n"
+    )
+
+def find_and_print_best_savings_account_by_sharpe_ratio(conn: Connection, current_date: datetime, P: float):
+    best_account_id_and_sr = find_best_savings_account_by_sharpe_ratio(conn, current_date, P)
+    account_details = find_savings_account_by_id(conn, best_account_id_and_sr['account_id'])
+    best_account = best_account_id_and_sr | account_details
     print_best_savings_account_by_sharpe_ratio(best_account)
 

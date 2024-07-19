@@ -2,7 +2,7 @@ from datetime import datetime
 import pandas as pd
 from typing import Dict, List
 
-from domain.balance import calc_returns, calc_sr_stats_by_account
+from domain.balance import calc_returns 
 from domain.sharpe_ratio_math import calc_sharpe_ratio
 
 # TODO: replace with dataclass?
@@ -44,7 +44,7 @@ def calc_best_savings_account_by_sharpe_ratio(P, current_date, terms_history_df,
     
     best_account = sr_df.loc[sr_df['sr'].idxmax()]
     
-    return best_account
+    return best_account.to_dict()
 
 # @deprecated against using the full history of APY changes
 def calc_apy_last_year(df):
