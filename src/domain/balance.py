@@ -15,12 +15,12 @@ def get_terms_period(current_terms: Terms, next_terms: Terms | None, current_dat
     next_terms_change_date = next_terms['date'] if next_terms else current_date
     return terms_change_date, next_terms_change_date
 
-def calc_compound_future_value_with_dynamic_terms(P: float, terms_history: TermsHistory, current_date: datetime) -> FutureValueDetails:
+def calc_compound_future_value_with_dynamic_terms(P: float, terms_history: TermsHistory, current_date: datetime):
     accumulated_amount_prev_period = P
     accumulated_amount = P
     balance_history = [P]
     return_rate_history = [0]
-    
+
     for i in range(len(terms_history)):
         interest_rate = terms_history[i]['r_a']
         compounding_frequency = terms_history[i]['n']
@@ -35,28 +35,26 @@ def calc_compound_future_value_with_dynamic_terms(P: float, terms_history: Terms
         return_rate_history.append(return_rate)
 
     return_rate_total = calc_return_rate(P, accumulated_amount)
-    
-    return accumulated_amount, balance_history, return_rate_history, return_rate_total
 
-def calc_future_value_stats(P: float, current_date: datetime, account_terms_history: pd.Series):
-    annual_rate_terms_history = convert_apy_to_annual_rate_terms_history(account_terms_history)
-    stats = calc_compound_future_value_with_dynamic_terms(P, annual_rate_terms_history, current_date)
-    return stats
+    result = {
+        'accumulated_amount': accumulated_amount,
+        'balance_history': balance_history,
+        'return_rate_history': return_rate_history,
+        'return_rate_total': return_rate_total
+    }
+
+    return result
 
 def calc_balance(P: float, current_date: datetime, account_terms_history: pd.Series) -> float:
     annual_rate_terms_history = convert_apy_to_annual_rate_terms_history(account_terms_history)
-    balance, _, _ = calc_compound_future_value_with_dynamic_terms(P, annual_rate_terms_history, current_date)
-    return balance
+    stats = calc_compound_future_value_with_dynamic_terms(P, annual_rate_terms_history, current_date)
+    return stats['accumulated_amount']
 
-
-def convert_apy_to_annual_rate_terms_history(account_terms_history: pd.Series) -> pd.Series:
-    terms = pd.Series(account_terms_history.apply(lambda t: {'APY': t['apy'], 'n': t['n'], 'date': t['date']}, axis=1)).reset_index(drop=True)
-
-    return terms.apply(lambda term: {
-        'r_a': calc_annual_rate_by_APY(term['n'], term['APY']),
-        'n': term['n'],
-        'date': datetime.strptime(term['date'], '%Y-%m-%d')
-    })
+def convert_apy_to_annual_rate_terms_history(account_terms_history):
+    df = account_terms_history.copy()
+    df['r_a'] = df.apply(lambda t: calc_annual_rate_by_APY(t['n'], t['apy']), axis=1)
+    df['date'] = df.apply(lambda t: datetime.strptime(t['date'], '%Y-%m-%d'), axis=1)
+    return df
 
 def calc_balance_for_all_accounts(P: float, current_date: datetime, terms_history: pd.DataFrame) -> pd.DataFrame:
     def calc_balance_for_account(account_terms_history: pd.DataFrame) -> float:
