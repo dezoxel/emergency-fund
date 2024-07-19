@@ -14,16 +14,20 @@ def update_apy_last_year(conn, current_date):
     df.to_sql('savings_accounts_apy_last_year', conn, if_exists='append', index=False)
     conn.commit()
 
-def get_risk_place(df, account_id):
-    place = df.sort_values(by='std_returns')['account_id'].tolist().index(account_id) + 1
-    return place
+def calc_risk_place(df):
+    df['risk_place'] = df['std_returns'].rank(method='min').astype(int)
+    return df
 
 def get_profitability_place(df, account_id):
     place = df.sort_values(by='balance', ascending=False)['account_id'].tolist().index(account_id) + 1
     return place
 
-def get_balance(df, account_id):
-    balance = df[df['account_id'] == account_id]['balance']
+def get_risk_place_by_id(df, account_id):
+    place = df[df['account_id'] == account_id]['risk_place'].iloc[0]
+    return place
+
+def get_balance_by_id(df, account_id):
+    balance = df[df['account_id'] == account_id]['balance'].iloc[0]
     return balance
 
 def find_and_print_best_savings_account_by_sharpe_ratio_last_year(conn, current_date, P):
@@ -39,11 +43,12 @@ def find_and_print_best_savings_account_by_sharpe_ratio_last_year(conn, current_
     balance_df = calc_balance_for_every_account(future_value_by_account)
 
     finance_info = sharpe_ratio_df.merge(std_returns_df, on='account_id').merge(return_rate_df, on='account_id').merge(balance_df, on='account_id')
+    finance_info = calc_risk_place(finance_info)
 
     best_account_stats = calc_best_savings_account_by_sharpe_ratio(finance_info)
-    risk_place = get_risk_place(finance_info, best_account_stats['account_id'])
+    risk_place = get_risk_place_by_id(finance_info, best_account_stats['account_id'])
     profitability_place = get_profitability_place(finance_info, best_account_stats['account_id'])
-    balance = get_balance(finance_info, best_account_stats['account_id'])
+    balance = get_balance_by_id(finance_info, best_account_stats['account_id'])
 
     account_details = find_savings_account_by_id(conn, best_account_stats['account_id'])
 
@@ -68,6 +73,6 @@ def print_best_savings_account_by_sharpe_ratio(best_account):
         f"Current Balance: {best_account['balance']:.2f}\n"
         f"Sharpe Ratio: {best_account['sr']:.4f}\n"
         f"ROI: {best_account['return_rate']*100:.2f}%\n"
-        f"Risk: {best_account['risk_place']} place among {best_account['total_accounts']} accounts (less is better)\n"
+        f"Risk: {best_account['risk_place']:.0f} place among {best_account['total_accounts']} accounts (less is better)\n"
         f"Profitability: {best_account['profitability_place']} place among {best_account['total_accounts']} accounts (less is better)\n"
     )
