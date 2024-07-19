@@ -41,6 +41,12 @@ def calc_return_rate_for_every_account(future_value_by_account):
         'return_rate': [values['return_rate_total'] for values in future_value_by_account.values()]
     })
 
+def calc_balance_for_every_account(future_value_by_account):
+    return pd.DataFrame({
+        'account_id': future_value_by_account.keys(),
+        'balance': [values['accumulated_amount'] for values in future_value_by_account.values()]
+    })
+
 def calc_best_savings_account_by_sharpe_ratio(sr_df):
     best_account = sr_df.loc[sr_df['sr'].idxmax()].to_dict()
 
