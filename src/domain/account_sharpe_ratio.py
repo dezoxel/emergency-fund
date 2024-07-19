@@ -1,58 +1,52 @@
+import numpy as np
 from datetime import datetime
 import pandas as pd
 from typing import Dict, List
 
-from domain.balance import calc_future_value_stats
+from domain.balance import calc_compound_future_value_with_dynamic_terms
 from domain.sharpe_ratio_math import calc_sharpe_ratio
 
 # TODO: replace with dataclass?
 ShareRatioStatsByAccount = Dict[str, Dict[str, List[float]]]
 
-def calc_sr_stats_by_account(P: float, current_date: datetime, terms_history: pd.DataFrame, rfr_history: pd.DataFrame) -> pd.DataFrame:
-    def calc_returns_for_account(account_terms_history: pd.DataFrame) -> float:
-        keys = ('accumulated_amount', 'balance_history', 'return_rate_history', 'return_rate_total')
-        stats = calc_future_value_stats(P, current_date, account_terms_history)
-        stats_dict = dict(zip(keys, stats))
-        return stats_dict
+def calc_compound_future_value_for_every_account(P: float, current_date: datetime, terms_history: pd.DataFrame) -> dict:
+    terms_by_account = terms_history.groupby('account_id')
 
-    stats_df = terms_history.groupby('account_id').apply(calc_returns_for_account).reset_index()
-    stats_df.columns = ['account_id', 'stats']
-
-    rfr_list = rfr_history['rfr'].tolist()
-    stats = {
-        row['account_id']: {
-            'returns': row['stats']['return_rate_history'][1:],
-            'rfr': rfr_list,
-            'return_rate_total': row['stats']['return_rate_total']
-        }
-        for _, row in stats_df.iterrows()
+    stats_by_account = {
+        account_id: calc_compound_future_value_with_dynamic_terms(P, terms.apply(lambda row: row.to_dict(), axis=1).reset_index(drop=True), current_date)
+        for account_id, terms in terms_by_account
     }
 
-    return stats
+    return stats_by_account
 
-def calc_sharpe_ratios_by_account(sr_stats_by_acc: ShareRatioStatsByAccount) -> pd.DataFrame:
-    results = {'account_id': [], 'sr': [], 'return_rate': []}
+def calc_sharpe_ratio_for_every_account(future_value_by_account, rfr_history):
+    risk_free_rates = rfr_history['rfr'].tolist()
+    results = {'account_id': [], 'sr': []}
     
-    for account_id, values in sr_stats_by_acc.items():
-        returns = values['returns']
-        risk_free_rates = values['rfr']
-        return_rate = values['return_rate_total']
+    for account_id, values in future_value_by_account.items():
+        returns = values['return_rate_history'][1:]
         sharpe_ratio = calc_sharpe_ratio(returns, risk_free_rates)
+
         results['account_id'].append(account_id)
         results['sr'].append(sharpe_ratio)
-        results['return_rate'].append(return_rate)
 
-    return pd.DataFrame(results)
+    results_df = pd.DataFrame(results)
 
-def calc_sharpe_ratio_for_all_accounts(P, current_date, terms_history_df, rfr_history_df):
-    sr_stats_by_acc = calc_sr_stats_by_account(P, current_date, terms_history_df, rfr_history_df)
-    sr_df = calc_sharpe_ratios_by_account(sr_stats_by_acc)
-    
-    return sr_df
+    return results_df
 
-def calc_best_savings_account_by_sharpe_ratio(P, current_date, terms_history_df, rfr_history_df):
-    sr_df = calc_sharpe_ratio_for_all_accounts(P, current_date, terms_history_df, rfr_history_df)
-    
+def calc_std_returns_for_every_account(future_value_by_account):
+    return pd.DataFrame({
+        'account_id': future_value_by_account.keys(),
+        'std_returns': [np.std(values['return_rate_history'][1:], ddof=1) for values in future_value_by_account.values()]
+    })
+
+def calc_return_rate_for_every_account(future_value_by_account):
+    return pd.DataFrame({
+        'account_id': future_value_by_account.keys(),
+        'return_rate': [values['return_rate_total'] for values in future_value_by_account.values()]
+    })
+
+def calc_best_savings_account_by_sharpe_ratio(sr_df):
     best_account = sr_df.loc[sr_df['sr'].idxmax()].to_dict()
 
     return best_account
