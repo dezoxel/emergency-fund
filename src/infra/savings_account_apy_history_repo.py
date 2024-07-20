@@ -23,9 +23,17 @@ def fetch_terms_history_last_year(conn, current_date):
     one_year_ago = current_date - timedelta(days=365)
 
     query = """
-    SELECT account_id, sa.account_name, apy, STRFTIME('%Y-%m-%d', effective_date) AS date, compound_frequency as n
+    SELECT
+        saah.account_id,
+        sa.account_name,
+        sa.account_type,
+        i.name as institution_name,
+        saah.apy,
+        STRFTIME('%Y-%m-%d', effective_date) AS date,
+        compound_frequency as n
     FROM savings_accounts_apy_history saah
     LEFT JOIN savings_accounts sa ON saah.account_id = sa.id
+    LEFT JOIN institutions i ON i.id = sa.institution_id
     WHERE effective_date >= ?
     ORDER BY account_id, date
     """

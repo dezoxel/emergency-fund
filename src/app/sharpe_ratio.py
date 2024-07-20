@@ -3,7 +3,6 @@ from infra.risk_free_rate_repo import fetch_rfr_history_last_year
 from infra.savings_account_apy_history_repo import fetch_apy_history_last_year, fetch_terms_history_last_year
 from domain.account_sharpe_ratio import calc_apy_last_year, calc_balance_for_every_account, calc_best_savings_account_by_sharpe_ratio, calc_compound_future_value_for_every_account, calc_return_rate_for_every_account, calc_sharpe_ratio_for_every_account, calc_std_returns_for_every_account
 from infra.savings_account_apy_last_year_repo import clear_apy_last_year
-from infra.savings_account_repo import find_savings_account_by_id
 
 def update_apy_last_year(conn, current_date):
     df = fetch_apy_history_last_year(conn, current_date)
@@ -46,28 +45,54 @@ def find_and_print_best_savings_account_by_sharpe_ratio_last_year(conn, current_
     return_rate_df = calc_return_rate_for_every_account(future_value_by_account)
     balance_df = calc_balance_for_every_account(future_value_by_account)
 
-    finance_info = sharpe_ratio_df.merge(std_returns_df, on='account_id').merge(return_rate_df, on='account_id').merge(balance_df, on='account_id')
+    account_meta_df = apy_terms_history[['account_id', 'account_name', 'account_type', 'institution_name']].drop_duplicates()
+    finance_info = (
+        sharpe_ratio_df
+            .merge(std_returns_df, on='account_id')
+            .merge(return_rate_df, on='account_id')
+            .merge(balance_df, on='account_id')
+            .merge(account_meta_df, on='account_id', how='left')
+    )
     finance_info = calc_risk_place(finance_info)
     finance_info = calc_profitability_place(finance_info)
     finance_info['principal_amount'] = P
 
     best_account_stats = calc_best_savings_account_by_sharpe_ratio(finance_info)
-    risk_place = get_risk_place_by_id(finance_info, best_account_stats['account_id'])
-    profitability_place = get_profitability_place_by_id(finance_info, best_account_stats['account_id'])
-    balance = get_balance_by_id(finance_info, best_account_stats['account_id'])
-
-    account_details = find_savings_account_by_id(conn, best_account_stats['account_id'])
 
     total_accounts = annual_rate_terms_history['account_id'].nunique()
-    best_account_report = best_account_stats | account_details | {
+    best_account_report = best_account_stats | {
         'total_accounts': total_accounts,
-        'risk_place': risk_place,
-        'profitability_place': profitability_place,
-        'principal_amount': P,
-        'current_balance': balance,
     }
 
     print_best_savings_account_by_sharpe_ratio(best_account_report)
+
+def find_sharpe_ratio_for_all_accounts_last_year(conn, current_date, P):
+    apy_terms_history = fetch_terms_history_last_year(conn, current_date)
+    rfr_history = fetch_rfr_history_last_year(conn, current_date)
+
+    annual_rate_terms_history = convert_apy_to_annual_rate_terms_history(apy_terms_history)
+
+    future_value_by_account = calc_compound_future_value_for_every_account(P, current_date, annual_rate_terms_history)
+    sharpe_ratio_df = calc_sharpe_ratio_for_every_account(future_value_by_account, rfr_history)
+    std_returns_df = calc_std_returns_for_every_account(future_value_by_account)
+    return_rate_df = calc_return_rate_for_every_account(future_value_by_account)
+    balance_df = calc_balance_for_every_account(future_value_by_account)
+
+    account_meta_df = apy_terms_history[['account_id', 'account_name', 'account_type', 'institution_name']].drop_duplicates()
+    finance_info = (
+        sharpe_ratio_df
+            .merge(std_returns_df, on='account_id')
+            .merge(return_rate_df, on='account_id')
+            .merge(balance_df, on='account_id')
+            .merge(account_meta_df, on='account_id', how='left')
+    )
+    finance_info = calc_risk_place(finance_info)
+    finance_info = calc_profitability_place(finance_info)
+    finance_info['principal_amount'] = P
+
+    df = finance_info.sort_values(by='sr', ascending=False).reset_index(drop=True)
+
+    return df
 
 def print_best_savings_account_by_sharpe_ratio(best_account):
     print(
