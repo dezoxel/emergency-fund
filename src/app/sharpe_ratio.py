@@ -15,11 +15,15 @@ def update_apy_last_year(conn, current_date):
     conn.commit()
 
 def calc_risk_place(df):
-    df['risk_place'] = df['std_returns'].rank(method='min').astype(int)
+    df['risk_place'] = df['std_returns'].rank(method='first').astype(int)
     return df
 
-def get_profitability_place(df, account_id):
-    place = df.sort_values(by='balance', ascending=False)['account_id'].tolist().index(account_id) + 1
+def calc_profitability_place(df):
+    df['profitability_place'] = df['balance'].rank(method='first', ascending=False).astype(int)
+    return df
+
+def get_profitability_place_by_id(df, account_id):
+    place = df[df['account_id'] == account_id]['profitability_place'].iloc[0]
     return place
 
 def get_risk_place_by_id(df, account_id):
@@ -44,10 +48,12 @@ def find_and_print_best_savings_account_by_sharpe_ratio_last_year(conn, current_
 
     finance_info = sharpe_ratio_df.merge(std_returns_df, on='account_id').merge(return_rate_df, on='account_id').merge(balance_df, on='account_id')
     finance_info = calc_risk_place(finance_info)
+    finance_info = calc_profitability_place(finance_info)
+    finance_info['principal_amount'] = P
 
     best_account_stats = calc_best_savings_account_by_sharpe_ratio(finance_info)
     risk_place = get_risk_place_by_id(finance_info, best_account_stats['account_id'])
-    profitability_place = get_profitability_place(finance_info, best_account_stats['account_id'])
+    profitability_place = get_profitability_place_by_id(finance_info, best_account_stats['account_id'])
     balance = get_balance_by_id(finance_info, best_account_stats['account_id'])
 
     account_details = find_savings_account_by_id(conn, best_account_stats['account_id'])
