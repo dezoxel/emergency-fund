@@ -18,6 +18,7 @@ CREATE TABLE savings_accounts (
     institution_id INTEGER NOT NULL,
     account_type TEXT CHECK(account_type IN ('High-Yield Savings', 'Money Market', 'Cash Management')),
     account_name TEXT NOT NULL,
+    terms_and_conditions_source_url TEXT,
     FOREIGN KEY (institution_id) REFERENCES institutions (id)
 );
 
