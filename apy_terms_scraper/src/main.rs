@@ -1,11 +1,12 @@
-use std::env;
-use dotenv::dotenv;
+mod config;
+
 use rusqlite::{Connection, Result, params_from_iter};
 use std::error::Error;
 use reqwest;
 use std::fs::File;
 use std::io::Write;
 use std::path::Path;
+use config::Config;
 
 fn fetch_terms_urls_by_account_ids(ids: &Vec<i32>, conn: &Connection) -> Result<Vec<String>, Box<dyn Error>> {
     let query = format!(
@@ -20,8 +21,7 @@ fn fetch_terms_urls_by_account_ids(ids: &Vec<i32>, conn: &Connection) -> Result<
     Ok(urls)
 }
 
-fn read_ids_to_scrape_from_env() -> Result<Vec<i32>, Box<dyn Error>> {
-    let ids_to_scrape_raw = env::var("SAVINGS_ACCOUNT_IDS_TO_SCRAPE")?;
+fn read_ids_to_scrape_from_env(ids_to_scrape_raw: String) -> Result<Vec<i32>, Box<dyn Error>> {
     let ids_to_scrape: Vec<i32> = ids_to_scrape_raw
         .split(',')
         .map(|id| id.trim().parse().unwrap())
@@ -48,15 +48,13 @@ fn store_apy_terms_html_to_file(html_content: &str, base_dir: &Path, file_name: 
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
-    dotenv().ok();
+    let config = Config::from_env()?;
     
     // Connect to DB to fetch the list of URLs to scrape
-    let db_path = env::var("DB_PATH")?;
-    let apy_html_path_raw = env::var("APY_HTML_PATH")?;
-    let apy_html_path = Path::new(&apy_html_path_raw).canonicalize()?;
-    let ids_to_scrape = read_ids_to_scrape_from_env()?;
+    let apy_html_path = Path::new(&config.apy_html_path).canonicalize()?;
+    let ids_to_scrape = read_ids_to_scrape_from_env(config.savings_account_ids_to_scrape)?;
 
-    let conn = Connection::open(db_path)?;
+    let conn = Connection::open(config.db_path)?;
 
     let urls = fetch_terms_urls_by_account_ids(&ids_to_scrape, &conn)?;
 
