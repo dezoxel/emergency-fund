@@ -1,11 +1,8 @@
-mod config;
-mod apy_terms_html;
-
 use rusqlite::{Connection, Result, params_from_iter};
 use std::error::Error;
 
-use config::Config;
-use apy_terms_html::{download_apy_terms_html_by_url, store_apy_terms_html_to_file};
+use apy_terms_scraper::config::Config;
+use apy_terms_scraper::apy_terms_html::{download_apy_terms_html_by_url, store_apy_terms_html_to_file};
 
 fn fetch_terms_urls_by_account_ids(ids: &Vec<i32>, conn: &Connection) -> Result<Vec<String>, Box<dyn Error>> {
     let query = format!(
@@ -23,7 +20,7 @@ fn fetch_terms_urls_by_account_ids(ids: &Vec<i32>, conn: &Connection) -> Result<
 fn map_ids_to_scrape_to_int(ids_to_scrape_raw: String) -> Result<Vec<i32>, Box<dyn Error>> {
     let ids_to_scrape: Vec<i32> = ids_to_scrape_raw
         .split(',')
-        .map(|id| id.trim().parse()?)
+        .map(|id| id.trim().parse().unwrap())
         .collect();
 
     Ok(ids_to_scrape)

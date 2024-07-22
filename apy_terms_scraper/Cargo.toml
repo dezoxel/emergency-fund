@@ -12,3 +12,15 @@ reqwest = { version = "0.12.5", features = ["blocking"] }
 rusqlite = "0.31.0"
 scraper = "0.19.1"
 serde = { version = "1.0.204", features = ["derive"] }
+
+[lib]
+name = "apy_terms_scraper"
+path = "src/lib.rs"
+
+[[bin]]
+name = "extract"
+path = "src/bin/extract.rs"
+
+[[bin]]
+name = "load"
+path = "src/bin/load.rs"
