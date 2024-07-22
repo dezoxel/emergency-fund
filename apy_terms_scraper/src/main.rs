@@ -1,12 +1,11 @@
 mod config;
+mod apy_terms_html;
 
 use rusqlite::{Connection, Result, params_from_iter};
 use std::error::Error;
-use reqwest;
-use std::fs::File;
-use std::io::Write;
-use std::path::Path;
+
 use config::Config;
+use apy_terms_html::{download_apy_terms_html_by_url, store_apy_terms_html_to_file};
 
 fn fetch_terms_urls_by_account_ids(ids: &Vec<i32>, conn: &Connection) -> Result<Vec<String>, Box<dyn Error>> {
     let query = format!(
@@ -21,50 +20,30 @@ fn fetch_terms_urls_by_account_ids(ids: &Vec<i32>, conn: &Connection) -> Result<
     Ok(urls)
 }
 
-fn read_ids_to_scrape_from_env(ids_to_scrape_raw: String) -> Result<Vec<i32>, Box<dyn Error>> {
+fn map_ids_to_scrape_to_int(ids_to_scrape_raw: String) -> Result<Vec<i32>, Box<dyn Error>> {
     let ids_to_scrape: Vec<i32> = ids_to_scrape_raw
         .split(',')
-        .map(|id| id.trim().parse().unwrap())
+        .map(|id| id.trim().parse()?)
         .collect();
 
     Ok(ids_to_scrape)
-}
-
-fn download_apy_terms_html_by_url(url: &str) -> Result<String, Box<dyn Error>> {
-    println!("Fetching HTML from the URL: {}", url);
-    let response = reqwest::blocking::get(url)?;
-    let html_content = response.text()?;
-
-    Ok(html_content)
-}
-
-fn store_apy_terms_html_to_file(html_content: &str, base_dir: &Path, file_name: &i32) -> Result<(), Box<dyn Error>> {
-    let full_file_path = base_dir.join(format!("{}.html", file_name));
-    println!("Storing HTML to: {}", full_file_path.display());
-    let mut file = File::create(full_file_path)?;
-    file.write_all(html_content.as_bytes())?;
-
-    Ok(())
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
     let config = Config::from_env()?;
     
     // Connect to DB to fetch the list of URLs to scrape
-    let apy_html_path = Path::new(&config.apy_html_path).canonicalize()?;
-    let ids_to_scrape = read_ids_to_scrape_from_env(config.savings_account_ids_to_scrape)?;
+    let ids_to_scrape = map_ids_to_scrape_to_int(config.savings_account_ids_to_scrape)?;
 
     let conn = Connection::open(config.db_path)?;
 
     let urls = fetch_terms_urls_by_account_ids(&ids_to_scrape, &conn)?;
 
-    println!("The URLs are: {:?}", urls);
-
     // For each URL, fetch the HTML content
     for (i, url) in urls.iter().enumerate() {
         let html_content = download_apy_terms_html_by_url(url)?;
         let account_id = ids_to_scrape[i];
-        store_apy_terms_html_to_file(&html_content, &apy_html_path, &account_id)?;
+        store_apy_terms_html_to_file(&html_content, &config.apy_html_path, &account_id)?;
     }
 
     // Parse the HTML content to extract the terms and conditions
