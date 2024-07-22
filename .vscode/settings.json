@@ -1,6 +1,7 @@
 {
     "cSpell.words": [
         "apys",
+        "canonicalize",
         "dateutil",
         "ddof",
         "dotenv",
@@ -8,6 +9,7 @@
         "ipynb",
         "iterrows",
         "ndarray",
-        "relativedelta"
+        "relativedelta",
+        "reqwest"
     ]
 }
