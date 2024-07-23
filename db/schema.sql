@@ -54,7 +54,8 @@ CREATE TABLE savings_accounts_apy_history (
     apy REAL NOT NULL,
     compound_frequency INTEGER NOT NULL DEFAULT 365,
     effective_date DATETIME NOT NULL,
-    FOREIGN KEY (account_id) REFERENCES savings_accounts (id)
+    FOREIGN KEY (account_id) REFERENCES savings_accounts (id),
+    UNIQUE(account_id, effective_date)
 );
 
 CREATE TABLE savings_accounts_apy_last_year (

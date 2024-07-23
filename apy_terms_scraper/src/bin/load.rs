@@ -1,13 +1,16 @@
-use apy_terms_scraper::apy_terms_html::{
-    map_ids_to_scrape_to_int, read_apy_terms_html_from_file, select_terms_text,
-};
-use apy_terms_scraper::config::Config;
 use async_openai::config::OpenAIConfig;
 use async_openai::{
     types::{ChatCompletionRequestSystemMessageArgs, CreateChatCompletionRequestArgs},
     Client,
 };
 use std::error::Error;
+use chrono::Utc;
+use rusqlite::{params, Connection, Result};
+
+use apy_terms_scraper::apy_terms_html::{
+    map_ids_to_scrape_to_int, read_apy_terms_html_from_file, select_terms_text,
+};
+use apy_terms_scraper::config::Config;
 
 fn craft_system_prompt(terms_text: &str) -> String {
     let template = r#"
@@ -66,12 +69,25 @@ async fn extract_apy_openai_call(
     Err("Failed to extract APY from OpenAI response".into())
 }
 
+fn write_apy_to_db(conn: &Connection, account_id: i32, apy: f32) -> Result<(), Box<dyn Error>> {
+    println!("Writing APY to DB... Account ID: {}, APY: {}", account_id, apy);
+    let query = "INSERT INTO savings_accounts_apy_history (account_id, apy, compound_frequency, effective_date) VALUES (?1, ?2, ?3, ?4)";
+    let compound_frequency = 365;
+    let effective_date = Utc::now().format("%Y-%m-%d").to_string();
+    let params = params![account_id, apy, compound_frequency, effective_date];
+    conn.execute(query, params)?;
+    println!("APY is written to the database");
+
+    Ok(())
+}
+
 // TODO: provide good error messages for the most common errors
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
     let config = Config::from_env()?;
 
     let client = Client::new();
+    let conn = Connection::open(config.db_path)?;
 
     let ids_to_scrape = map_ids_to_scrape_to_int(config.savings_account_ids_to_scrape)?;
 
@@ -80,7 +96,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         let terms_text = select_terms_text(&html_content)?;
         let system_prompt = craft_system_prompt(&terms_text);
         let apy = extract_apy_openai_call(&client, &system_prompt).await?;
-        println!("{}", apy);
+        write_apy_to_db(&conn, id, apy)?;
     }
 
     Ok(())
