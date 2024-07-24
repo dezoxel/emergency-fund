@@ -1,9 +1,10 @@
 use std::error::Error;
 
 use crate::institution::InstitutionName;
-use crate::everbank_html2text_strategy::EverBankStrategy;
-use crate::sofi_bank_html2text_strategy::SoFiBankStrategy;
-use crate::html2text_strategy::{Strategy, StrategyFactory};
+use super::strategy::SoFiBankStrategy;
+use super::strategy::EverBankStrategy;
+use super::Strategy;
+use super::StrategyFactory;
 
 impl StrategyFactory {
     pub fn create(&self, name: &InstitutionName) -> Result<Box<dyn Strategy>, Box<dyn Error>> {
