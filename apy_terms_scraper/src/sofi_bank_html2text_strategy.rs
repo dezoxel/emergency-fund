@@ -1,5 +1,5 @@
-use scraper::{Html, Selector};
 use std::error::Error;
+use scraper::{Html, Selector};
 
 use crate::html2text_strategy::Strategy;
 
