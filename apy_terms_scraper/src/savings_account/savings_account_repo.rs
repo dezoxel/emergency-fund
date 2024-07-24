@@ -12,7 +12,7 @@ impl<'a> SavingsAccountRepo<'a> {
         Self { conn }
     }
 
-    pub fn find_by_ids(&self, account_ids: Vec<i32>) -> Result<Vec<SavingsAccountAggr>, Error> {
+    pub fn find_by_ids(&self, account_ids: &Vec<i32>) -> Result<Vec<SavingsAccountAggr>, Error> {
         let placeholders = account_ids
             .iter()
             .map(|_| "?")

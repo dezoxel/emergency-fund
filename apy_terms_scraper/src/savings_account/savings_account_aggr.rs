@@ -3,6 +3,7 @@ use url::Url;
 use std::path::Path;
 use std::fs::File;
 use std::io::Write;
+use log::info;
 
 pub struct SavingsAccountAggr {
     id: i32,
@@ -30,7 +31,7 @@ impl SavingsAccountAggr {
 
     pub fn download_terms_html(&self) -> Result<String, Box<dyn Error>> {
         let url = self.terms_and_conditions_source_url.as_ref().ok_or("Unable to download terms HTML. Source URL is empty")?;
-        println!("Fetching HTML from the URL: {}", url);
+        info!("Fetching HTML from the URL: {}", url);
         let response = reqwest::blocking::get(url.as_str())?;
         let html = response.text()?;
     
@@ -41,7 +42,7 @@ impl SavingsAccountAggr {
         let file_name = self.id;
         let base_dir = Path::new(&html_dir).canonicalize()?;
         let full_file_path = base_dir.join(format!("{}.html", file_name));
-        println!("Storing HTML to: {}", full_file_path.display());
+        info!("Storing HTML to: {}", full_file_path.display());
         let mut file = File::create(full_file_path)?;
         file.write_all(html.as_bytes())?;
     
