@@ -1,4 +1,5 @@
 use rusqlite::{params_from_iter, Connection, Error};
+use url::Url;
 
 use super::SavingsAccountAggr;
 
@@ -22,12 +23,18 @@ impl<'a> SavingsAccountRepo<'a> {
             placeholders
         );
         let mut stmt = self.conn.prepare(&query)?;
+
         let accounts = stmt
             .query_map(params_from_iter(account_ids.iter()), |row| {
-                Ok(SavingsAccountAggr::new(
-                    row.get(0)?,
-                    row.get(1)?,
-                ))
+                let id: i32 = row.get(0)?;
+                let url_str: Option<String> = row.get(1)?;
+
+                let terms_and_conditions_source_url = match url_str {
+                    Some(ref url) => Url::parse(url).ok(),
+                    None => None,
+                };
+
+                Ok(SavingsAccountAggr::new(id, terms_and_conditions_source_url))
             })?
             .collect::<Result<Vec<SavingsAccountAggr>, Error>>()?;
 

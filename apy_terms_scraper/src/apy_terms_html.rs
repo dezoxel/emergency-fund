@@ -1,4 +1,3 @@
-use reqwest;
 use std::path::Path;
 use std::fs::File;
 use std::io::{Write, Read};
@@ -11,14 +10,6 @@ pub fn map_ids_to_scrape_to_int(ids_to_scrape_raw: String) -> Result<Vec<i32>, B
         .collect();
 
     Ok(ids_to_scrape)
-}
-
-pub fn download_apy_terms_html_by_url(url: &str) -> Result<String, Box<dyn Error>> {
-    println!("Fetching HTML from the URL: {}", url);
-    let response = reqwest::blocking::get(url)?;
-    let html_content = response.text()?;
-
-    Ok(html_content)
 }
 
 pub fn store_apy_terms_html_to_file(html_content: &str, apy_html_path: &str, file_name: &i32) -> Result<(), Box<dyn Error>> {
