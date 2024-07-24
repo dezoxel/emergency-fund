@@ -1,7 +1,7 @@
 use rusqlite::{Connection, Result};
 use std::error::Error;
 
-use apy_terms_scraper::apy_terms_html::{map_ids_to_scrape_to_int, store_apy_terms_html_to_file};
+use apy_terms_scraper::apy_terms_html::map_ids_to_scrape_to_int;
 use apy_terms_scraper::config::Config;
 use apy_terms_scraper::savings_account::SavingsAccountRepo;
 
@@ -16,7 +16,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     for account in accounts {
         let html = account.download_terms_html()?;
-        store_apy_terms_html_to_file(&html, &config.apy_html_path, &account.id())?;
+        account.write_terms_html_to_file(&config.apy_html_path, &html)?;
     }
 
     Ok(())

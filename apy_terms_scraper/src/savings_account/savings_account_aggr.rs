@@ -1,5 +1,8 @@
 use std::error::Error;
 use url::Url;
+use std::path::Path;
+use std::fs::File;
+use std::io::Write;
 
 pub struct SavingsAccountAggr {
     id: i32,
@@ -32,5 +35,16 @@ impl SavingsAccountAggr {
         let html = response.text()?;
     
         Ok(html)
+    }
+
+    pub fn write_terms_html_to_file(&self, html_dir: &str, html: &str) -> Result<(), Box<dyn Error>> {
+        let file_name = self.id;
+        let base_dir = Path::new(&html_dir).canonicalize()?;
+        let full_file_path = base_dir.join(format!("{}.html", file_name));
+        println!("Storing HTML to: {}", full_file_path.display());
+        let mut file = File::create(full_file_path)?;
+        file.write_all(html.as_bytes())?;
+    
+        Ok(())
     }
 }
