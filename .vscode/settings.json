@@ -2,15 +2,19 @@
     "cSpell.words": [
         "apys",
         "canonicalize",
+        "chrono",
         "dateutil",
         "ddof",
         "dotenv",
+        "everbank",
         "idxmax",
         "ipynb",
         "iterrows",
         "ndarray",
         "openai",
         "relativedelta",
-        "reqwest"
+        "reqwest",
+        "rusqlite",
+        "sofi"
     ]
 }
