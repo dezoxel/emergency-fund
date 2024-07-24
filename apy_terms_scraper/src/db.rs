@@ -3,27 +3,6 @@ use rusqlite::{params, params_from_iter, Connection, Result};
 use chrono::Utc;
 use std::collections::HashMap;
 
-pub fn fetch_terms_urls_by_account_ids(
-    ids: &Vec<i32>,
-    conn: &Connection,
-) -> Result<Vec<String>, Box<dyn Error>> {
-    let query = format!(
-        "SELECT terms_and_conditions_source_url FROM savings_accounts WHERE id IN ({})",
-        ids.iter().map(|_| "?").collect::<Vec<_>>().join(",")
-    );
-
-    let mut stmt = conn.prepare(&query)?;
-    let url_iter = stmt.query_map(params_from_iter(ids.iter()), |row| {
-        row.get::<_, Option<String>>(0)
-    })?;
-    let urls: Vec<String> = url_iter
-        .filter_map(Result::ok)
-        .filter_map(|url| url)
-        .collect();
-
-    Ok(urls)
-}
-
 pub fn write_apy_to_db(conn: &Connection, account_id: i32, apy: f32) -> Result<(), Box<dyn Error>> {
     println!(
         "Writing APY to DB... Account ID: {}, APY: {}",
