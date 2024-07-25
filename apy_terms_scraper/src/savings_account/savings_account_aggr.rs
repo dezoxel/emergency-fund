@@ -2,7 +2,7 @@ use std::error::Error;
 use url::Url;
 use std::path::Path;
 use std::fs::File;
-use std::io::Write;
+use std::io::{Read, Write};
 use log::info;
 
 use crate::institution::InstitutionName;
@@ -56,5 +56,17 @@ impl SavingsAccountAggr {
         file.write_all(html.as_bytes())?;
     
         Ok(())
+    }
+
+    pub fn read_terms_html_from_file(&self, html_dir: &str) -> Result<String, Box<dyn Error>> {
+        let file_name = self.id;
+        let base_dir = Path::new(&html_dir).canonicalize()?;
+        let full_file_path = base_dir.join(format!("{}.html", file_name));
+        info!("Reading HTML from: {}", full_file_path.display());
+        let mut file = File::open(full_file_path)?;
+        let mut contents = String::new();
+        file.read_to_string(&mut contents)?;
+    
+        Ok(contents)
     }
 }

@@ -4,7 +4,6 @@ use async_openai::Client;
 use env_logger;
 use log::info;
 
-use apy_terms_scraper::apy_terms_html::read_apy_terms_html_from_file;
 use apy_terms_scraper::config::Config;
 use apy_terms_scraper::savings_account::SavingsAccountRepo;
 use apy_terms_scraper::parse_html::StrategyFactory;
@@ -28,7 +27,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     );
 
     for account in accounts {
-        let html_content = read_apy_terms_html_from_file(&config.apy_html_path, &account.id())?;
+        let html_content = account.read_terms_html_from_file(&config.apy_html_path)?;
         let institution_name = account.institution_name();
         let strategy = StrategyFactory.create(&institution_name)?;
         let terms_text = strategy.extract(&html_content)?;
