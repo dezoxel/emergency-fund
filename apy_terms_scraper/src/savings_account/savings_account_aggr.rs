@@ -6,6 +6,7 @@ use std::io::{Read, Write};
 use log::info;
 
 use crate::institution::InstitutionName;
+use crate::parse_html::StrategyFactory;
 
 pub struct SavingsAccountAggr {
     id: i32,
@@ -68,5 +69,11 @@ impl SavingsAccountAggr {
         file.read_to_string(&mut contents)?;
     
         Ok(contents)
+    }
+
+    pub fn extract_terms_text_from_html(&self, html: &str) -> Result<String, Box<dyn Error>> {
+        let strategy = StrategyFactory.create(&self.institution_name)?;
+        let terms_text = strategy.extract(&html)?;
+        Ok(terms_text)
     }
 }
