@@ -5,8 +5,8 @@ use rusqlite::{Connection, Result};
 use std::error::Error;
 
 use apy_terms_scraper::config::Config;
-use apy_terms_scraper::db::write_apy_to_db;
 use apy_terms_scraper::savings_account::SavingsAccountRepo;
+use apy_terms_scraper::savings_account::APYHistoryRecordRepo;
 use apy_terms_scraper::vec_comma_str::vec_to_comma_str;
 
 #[tokio::main]
@@ -17,6 +17,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let conn = Connection::open(config.db_path)?;
 
     let savings_account_repo = SavingsAccountRepo::new(&conn);
+    let apy_history_record_repo = APYHistoryRecordRepo::new(&conn);
     let accounts = savings_account_repo.find_by_ids(&config.savings_account_ids_to_scrape)?;
     info!(
         "Found {} accounts to scrape: {}.",
@@ -44,7 +45,11 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 error!("Failed to extract APY from terms text for account {}: {}", account.id(), e);
                 e
             })?;
-        write_apy_to_db(&conn, account.id(), apy)?;
+        let apy_history_record = apy_history_record_repo.create(&account, apy);
+        apy_history_record_repo.commit(&apy_history_record).map_err(|e| {
+            error!("Failed to commit APY history record for account {}: {}", account.id(), e);
+            e
+        })?;
     }
 
     Ok(())

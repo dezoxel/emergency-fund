@@ -1,5 +1,4 @@
 pub mod config;
-pub mod db;
 pub mod institution;
 pub mod parse_html;
 pub mod openai;
