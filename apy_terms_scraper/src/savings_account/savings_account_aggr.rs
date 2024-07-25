@@ -5,19 +5,24 @@ use std::fs::File;
 use std::io::Write;
 use log::info;
 
+use crate::institution::InstitutionName;
+
 pub struct SavingsAccountAggr {
     id: i32,
     terms_and_conditions_source_url: Option<Url>,
+    institution_name: InstitutionName,
 }
 
 impl SavingsAccountAggr {
     pub fn new(
         id: i32,
         terms_and_conditions_source_url: Option<Url>,
+        institution_name: InstitutionName,
     ) -> Self {
         Self {
             id,
             terms_and_conditions_source_url,
+            institution_name,
         }
     }
 
@@ -49,3 +54,4 @@ impl SavingsAccountAggr {
         Ok(())
     }
 }
+
