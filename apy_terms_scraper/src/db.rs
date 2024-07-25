@@ -2,7 +2,7 @@ use std::error::Error;
 use rusqlite::{params, Connection, Result};
 use chrono::Utc;
 
-pub fn write_apy_to_db(conn: &Connection, account_id: i32, apy: f32) -> Result<(), Box<dyn Error>> {
+pub fn write_apy_to_db(conn: &Connection, account_id: i32, apy: f64) -> Result<(), Box<dyn Error>> {
     println!(
         "Writing APY to DB... Account ID: {}, APY: {}",
         account_id, apy

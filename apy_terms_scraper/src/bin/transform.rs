@@ -1,12 +1,11 @@
+use log::info;
+use env_logger;
 use rusqlite::{Connection, Result};
 use std::error::Error;
 use async_openai::Client;
-use env_logger;
-use log::info;
 
 use apy_terms_scraper::config::Config;
 use apy_terms_scraper::savings_account::SavingsAccountRepo;
-use apy_terms_scraper::openai::{craft_system_prompt, extract_apy_openai_call};
 use apy_terms_scraper::db::write_apy_to_db;
 use apy_terms_scraper::vec_comma_str::vec_to_comma_str;
 
@@ -28,8 +27,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     for account in accounts {
         let html = account.read_terms_html_from_file(&config.apy_html_path)?;
         let terms_text = account.extract_terms_text_from_html(&html)?;
-        let system_prompt = craft_system_prompt(&terms_text);
-        let apy = extract_apy_openai_call(&client, &system_prompt).await?;
+        let apy = account.extract_apy_from_terms_text(&client, &terms_text).await?;
         write_apy_to_db(&conn, account.id(), apy)?;
     }
 

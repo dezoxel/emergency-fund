@@ -31,7 +31,7 @@ Terms text is below:
 pub async fn extract_apy_openai_call(
     client: &Client<OpenAIConfig>,
     system_prompt: &str,
-) -> Result<f32, Box<dyn Error>> {
+) -> Result<f64, Box<dyn Error>> {
     let request = CreateChatCompletionRequestArgs::default()
         .max_tokens(512u32)
         .model("gpt-4o-mini")
@@ -45,7 +45,7 @@ pub async fn extract_apy_openai_call(
 
     if let Some(first_choice) = response.choices.get(0) {
         if let Some(content) = &first_choice.message.content {
-            return Ok(content.parse::<f32>()?);
+            return Ok(content.parse::<f64>()?);
         }
     }
 

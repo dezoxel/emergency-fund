@@ -1,12 +1,14 @@
+use log::info;
 use std::error::Error;
 use url::Url;
 use std::path::Path;
 use std::fs::File;
 use std::io::{Read, Write};
-use log::info;
+use async_openai::{Client, config::OpenAIConfig};
 
 use crate::institution::InstitutionName;
 use crate::parse_html::StrategyFactory;
+use crate::openai::{craft_system_prompt, extract_apy_openai_call};
 
 pub struct SavingsAccountAggr {
     id: i32,
@@ -75,5 +77,11 @@ impl SavingsAccountAggr {
         let strategy = StrategyFactory.create(&self.institution_name)?;
         let terms_text = strategy.extract(&html)?;
         Ok(terms_text)
+    }
+
+    pub async fn extract_apy_from_terms_text(&self, client: &Client<OpenAIConfig>, terms_text: &str) -> Result<f64, Box<dyn Error>> {
+        let system_prompt = craft_system_prompt(&terms_text);
+        let apy = extract_apy_openai_call(&client, &system_prompt).await?;
+        Ok(apy)
     }
 }

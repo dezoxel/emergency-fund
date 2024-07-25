@@ -1,5 +1,5 @@
-use env_logger;
 use log::{info, error};
+use env_logger;
 use rusqlite::{Connection, Result};
 use std::error::Error;
 
