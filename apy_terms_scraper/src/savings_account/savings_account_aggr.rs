@@ -34,6 +34,10 @@ impl SavingsAccountAggr {
         self.terms_and_conditions_source_url.as_ref()
     }
 
+    pub fn institution_name(&self) -> &InstitutionName {
+        &self.institution_name
+    }
+
     pub fn download_terms_html(&self) -> Result<String, Box<dyn Error>> {
         let url = self.terms_and_conditions_source_url.as_ref().ok_or("Unable to download terms HTML. Source URL is empty")?;
         info!("Fetching HTML from the URL: {}", url);
@@ -54,4 +58,3 @@ impl SavingsAccountAggr {
         Ok(())
     }
 }
-
