@@ -4,10 +4,7 @@ DROP TABLE IF EXISTS institutions;
 
 CREATE TABLE institutions (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    address TEXT,
-    phone TEXT,
-    website TEXT
+    name TEXT NOT NULL
 );
 
 CREATE TABLE savings_accounts (
