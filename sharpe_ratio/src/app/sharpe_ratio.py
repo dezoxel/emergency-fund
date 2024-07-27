@@ -1,17 +1,7 @@
 from domain.balance import convert_apy_to_annual_rate_terms_history
 from infra.risk_free_rate_repo import fetch_rfr_history_last_year
-from infra.savings_account_apy_history_repo import fetch_apy_history_last_year, fetch_terms_history_last_year
-from domain.account_sharpe_ratio import calc_apy_last_year, calc_balance_for_every_account, calc_best_savings_account_by_sharpe_ratio, calc_compound_future_value_for_every_account, calc_return_rate_for_every_account, calc_sharpe_ratio_for_every_account, calc_std_returns_for_every_account
-from infra.savings_account_apy_last_year_repo import clear_apy_last_year
-
-def update_apy_last_year(conn, current_date):
-    df = fetch_apy_history_last_year(conn, current_date)
-    if df.empty:
-        print('Unable to update APY data for the last year. APY history for the last year is empty.')
-    clear_apy_last_year(conn)
-    df = calc_apy_last_year(df)
-    df.to_sql('savings_accounts_apy_last_year', conn, if_exists='append', index=False)
-    conn.commit()
+from infra.savings_account_apy_history_repo import fetch_terms_history_last_year
+from domain.account_sharpe_ratio import calc_balance_for_every_account, calc_best_savings_account_by_sharpe_ratio, calc_compound_future_value_for_every_account, calc_return_rate_for_every_account, calc_sharpe_ratio_for_every_account, calc_std_returns_for_every_account
 
 def calc_risk_place(df):
     df['risk_place'] = df['std_returns'].rank(method='first').astype(int)
